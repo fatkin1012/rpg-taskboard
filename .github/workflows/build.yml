@@ -3,8 +3,6 @@ name: Build Windows
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   build-windows:
@@ -26,16 +24,14 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies (npm)
+      - name: Install npm dependencies
         run: npm ci
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run tauri build
+
+      - name: Upload MSI
+        uses: actions/upload-artifact@v4
         with:
-          tagName: v__VERSION__
-          releaseName: 'RPG Task Board v__VERSION__'
-          releaseBody: 'See the assets to download this version.'
-          releaseDraft: true
-          prerelease: false
+          name: RPG-Task-Board-Windows
+          path: src-tauri/target/release/bundle/msi/*.msi
