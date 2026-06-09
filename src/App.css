@@ -1,0 +1,77 @@
+/* ============================================
+   RPG Task Board — Global Styles
+   ============================================ */
+
+/* Pixel-style scrollbar for the overlay */
+.overlay-window ::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overlay-window ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overlay-window ::-webkit-scrollbar-thumb {
+  background: #4a4a8a;
+  border-radius: 2px;
+}
+
+.overlay-window ::-webkit-scrollbar-thumb:hover {
+  background: #6a6a8a;
+}
+
+/* Pixel text rendering */
+.font-pixel {
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  font-smooth: never;
+}
+
+/* XP Float Animation */
+@keyframes xpFloat {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
+
+.animate-xp-float {
+  animation: xpFloat 1s ease-out forwards;
+}
+
+/* Level Up Pulse */
+@keyframes levelUpPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+  }
+}
+
+.level-up-effect {
+  animation: levelUpPulse 1.5s ease-out 3;
+}
+
+/* Fade in animation for task items */
+@keyframes taskAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.task-enter {
+  animation: taskAppear 0.3s ease-out forwards;
+}
