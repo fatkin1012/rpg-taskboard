@@ -1,26 +1,28 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { WidgetMode, Difficulty } from '../types';
-import { MODE_DIMENSIONS, EXP_VALUES } from '../constants';
-import { getTauriWindow } from '../utils/tauri';
+import type { WidgetMode, Difficulty, OverlayTasks, OverlayXP } from '../types';
+import { MODE_DIMENSIONS } from '../constants';
 import MiniWidget from './MiniWidget';
 import CompactWidget from './CompactWidget';
 import FullWidget from './FullWidget';
+import SettingsPanel from './SettingsPanel';
 
 interface OverlayProps {
   mode: WidgetMode;
   onModeChange: (mode: WidgetMode) => void;
-  tasks: ReturnType<typeof import('../hooks/useTasks').useTasks>;
-  xp: ReturnType<typeof import('../hooks/useXP').useXP>;
+  tasks: OverlayTasks;
+  xp: OverlayXP;
+  soundEnabled: boolean;
+  onSoundToggle: (enabled: boolean) => void;
 }
 
-export default function Overlay({ mode, onModeChange, tasks, xp }: OverlayProps) {
+export default function Overlay({ mode, onModeChange, tasks, xp, soundEnabled, onSoundToggle }: OverlayProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [showSettings, setShowSettings] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const dims = MODE_DIMENSIONS[mode];
-  const numericWidth = parseInt(dims.width);
 
   // Load saved position
   useEffect(() => {
@@ -32,11 +34,16 @@ export default function Overlay({ mode, onModeChange, tasks, xp }: OverlayProps)
     } catch {}
   }, []);
 
-  // Save position
+  // Save position (debounced)
+  const latestPosition = useRef(position);
+  latestPosition.current = position;
   useEffect(() => {
-    try {
-      localStorage.setItem('rpg-taskboard-position', JSON.stringify(position));
-    } catch {}
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('rpg-taskboard-position', JSON.stringify(latestPosition.current));
+      } catch {}
+    }, 300);
+    return () => clearTimeout(timer);
   }, [position]);
 
   // Mouse-based dragging (works in both browser and Tauri)
@@ -55,9 +62,14 @@ export default function Overlay({ mode, onModeChange, tasks, xp }: OverlayProps)
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
+      const overlayWidth = overlayRef.current?.offsetWidth ?? parseInt(dims.width);
+      const overlayHeight = overlayRef.current?.offsetHeight ?? parseInt(dims.minHeight);
       const newX = e.clientX - dragOffset.x;
       const newY = e.clientY - dragOffset.y;
-      setPosition({ x: Math.max(0, newX), y: Math.max(0, newY) });
+      setPosition({
+        x: Math.max(0, Math.min(newX, window.innerWidth - overlayWidth)),
+        y: Math.max(0, Math.min(newY, window.innerHeight - overlayHeight)),
+      });
     };
 
     const handleMouseUp = () => {
@@ -70,13 +82,33 @@ export default function Overlay({ mode, onModeChange, tasks, xp }: OverlayProps)
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset]);
+  }, [isDragging, dragOffset, dims.width, dims.minHeight]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept when typing in an input
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+      if (e.key === 'Escape') {
+        setShowSettings(false);
+      }
+      if (e.key === '1') onModeChange('mini');
+      if (e.key === '2') onModeChange('compact');
+      if (e.key === '3') onModeChange('full');
+      if ((e.key === 'n' || e.key === 'N') && mode !== 'full') {
+        onModeChange('full');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mode, onModeChange]);
 
   const handleToggleComplete = useCallback((taskId: string): number => {
     const exp = tasks.toggleTask(taskId);
     if (exp > 0) {
-      // Use setTimeout to avoid setState-during-render issues
-      setTimeout(() => xp.addXP(exp), 0);
+      xp.addXP(exp);
     }
     return exp;
   }, [tasks, xp]);
@@ -109,78 +141,94 @@ export default function Overlay({ mode, onModeChange, tasks, xp }: OverlayProps)
         onMouseDown={handleMouseDown}
         className="cursor-grab active:cursor-grabbing"
       >
-        {/* Mode toggle buttons */}
+        {/* Top-right controls: settings + mode buttons */}
         <div className="flex justify-end gap-0.5 p-0.5 absolute top-0 right-0 z-10">
+          <ModeButton
+            active={showSettings}
+            label="⚙"
+            onClick={() => setShowSettings(!showSettings)}
+            title="Settings"
+          />
           <ModeButton
             active={mode === 'mini'}
             label="─"
             onClick={() => onModeChange('mini')}
-            title="Mini mode"
+            title="Mini mode [1]"
           />
           <ModeButton
             active={mode === 'compact'}
             label="▣"
             onClick={() => onModeChange('compact')}
-            title="Compact mode"
+            title="Compact mode [2]"
           />
           <ModeButton
             active={mode === 'full'}
             label="☰"
             onClick={() => onModeChange('full')}
-            title="Full mode"
+            title="Full mode [3]"
           />
         </div>
 
         {/* Widget content based on mode */}
         <div
-          className="bg-pixel-panel/90 border border-pixel-border rounded-lg shadow-lg shadow-black/50 backdrop-blur-sm overflow-hidden"
+          className="bg-pixel-panel/90 border border-pixel-border rounded-lg shadow-lg shadow-black/50 backdrop-blur-sm overflow-hidden relative"
           style={{ minHeight: dims.minHeight }}
         >
-          {mode === 'mini' && (
-            <MiniWidget
-              level={xp.player.level}
-              expInLevel={xp.expInLevel}
-              expForNext={xp.expForNext}
-              progress={xp.progress}
-              activeTaskCount={tasks.activeTasks.length}
-              showLevelUp={xp.showLevelUp}
-              notifications={xp.notifications}
+          {showSettings ? (
+            <SettingsPanel
+              soundEnabled={soundEnabled}
+              onSoundToggle={onSoundToggle}
+              onClose={() => setShowSettings(false)}
             />
-          )}
+          ) : (
+            <>
+              {mode === 'mini' && (
+                <MiniWidget
+                  level={xp.player.level}
+                  expInLevel={xp.expInLevel}
+                  expForNext={xp.expForNext}
+                  progress={xp.progress}
+                  activeTaskCount={tasks.activeTasks.length}
+                  showLevelUp={xp.showLevelUp}
+                  notifications={xp.notifications}
+                />
+              )}
 
-          {mode === 'compact' && (
-            <CompactWidget
-              level={xp.player.level}
-              expInLevel={xp.expInLevel}
-              expForNext={xp.expForNext}
-              progress={xp.progress}
-              tasks={tasks.tasks}
-              activeTasks={tasks.activeTasks}
-              showLevelUp={xp.showLevelUp}
-              notifications={xp.notifications}
-              onToggle={handleToggleComplete}
-              onDelete={tasks.deleteTask}
-            />
-          )}
+              {mode === 'compact' && (
+                <CompactWidget
+                  level={xp.player.level}
+                  expInLevel={xp.expInLevel}
+                  expForNext={xp.expForNext}
+                  progress={xp.progress}
+                  tasks={tasks.tasks}
+                  activeTasks={tasks.activeTasks}
+                  showLevelUp={xp.showLevelUp}
+                  notifications={xp.notifications}
+                  onToggle={handleToggleComplete}
+                  onDelete={tasks.deleteTask}
+                />
+              )}
 
-          {mode === 'full' && (
-            <FullWidget
-              level={xp.player.level}
-              expInLevel={xp.expInLevel}
-              expForNext={xp.expForNext}
-              progress={xp.progress}
-              tasks={tasks.tasks}
-              activeTasks={tasks.activeTasks}
-              completedTasks={tasks.completedTasks}
-              totalCompleted={xp.player.totalCompleted}
-              streak={xp.player.streak}
-              showLevelUp={xp.showLevelUp}
-              notifications={xp.notifications}
-              onToggle={handleToggleComplete}
-              onDelete={tasks.deleteTask}
-              onAddTask={handleAddTask}
-              onUncomplete={handleUncomplete}
-            />
+              {mode === 'full' && (
+                <FullWidget
+                  level={xp.player.level}
+                  expInLevel={xp.expInLevel}
+                  expForNext={xp.expForNext}
+                  progress={xp.progress}
+                  tasks={tasks.tasks}
+                  activeTasks={tasks.activeTasks}
+                  completedTasks={tasks.completedTasks}
+                  totalCompleted={xp.player.totalCompleted}
+                  streak={xp.player.streak}
+                  showLevelUp={xp.showLevelUp}
+                  notifications={xp.notifications}
+                  onToggle={handleToggleComplete}
+                  onDelete={tasks.deleteTask}
+                  onAddTask={handleAddTask}
+                  onUncomplete={handleUncomplete}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

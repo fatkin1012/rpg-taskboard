@@ -49,6 +49,17 @@ function TaskItem({ task, onToggle, onDelete }: {
 
   return (
     <div
+      tabIndex={0}
+      onKeyDown={e => {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+          e.preventDefault();
+          onDelete(task.id);
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          onToggle(task.id);
+        }
+      }}
       className={`flex items-center gap-1 px-2 py-1 rounded border transition-all duration-300 group ${
         task.completed
           ? 'border-pixel-hp/30 bg-pixel-hp/5 opacity-60'

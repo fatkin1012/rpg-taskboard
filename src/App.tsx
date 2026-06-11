@@ -3,6 +3,7 @@ import type { WidgetMode } from './types';
 import { useTasks } from './hooks/useTasks';
 import { useXP } from './hooks/useXP';
 import Overlay from './components/Overlay';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
 export default function App() {
@@ -16,6 +17,10 @@ export default function App() {
     return 'compact';
   });
 
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    return localStorage.getItem('rpg-taskboard-sound') !== 'false';
+  });
+
   const tasks = useTasks();
   const xp = useXP();
 
@@ -26,12 +31,23 @@ export default function App() {
     } catch {}
   };
 
+  const handleSoundToggle = (enabled: boolean) => {
+    setSoundEnabled(enabled);
+    try {
+      localStorage.setItem('rpg-taskboard-sound', String(enabled));
+    } catch {}
+  };
+
   return (
-    <Overlay
-      mode={mode}
-      onModeChange={handleModeChange}
-      tasks={tasks}
-      xp={xp}
-    />
+    <ErrorBoundary>
+      <Overlay
+        mode={mode}
+        onModeChange={handleModeChange}
+        tasks={tasks}
+        xp={xp}
+        soundEnabled={soundEnabled}
+        onSoundToggle={handleSoundToggle}
+      />
+    </ErrorBoundary>
   );
 }
