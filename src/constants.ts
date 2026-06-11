@@ -51,9 +51,9 @@ export function calculateLevel(exp: number): number {
  */
 export function expProgress(exp: number): number {
   const currentLevel = calculateLevel(exp);
-  const currentLevelExp = expForLevel(currentLevel);
-  const nextLevelExp = expForLevel(currentLevel + 1);
-  const progress = (exp - currentLevelExp) / (nextLevelExp - currentLevelExp);
+  const startOfLevel = currentLevel <= 1 ? 0 : expForLevel(currentLevel - 1);
+  const endOfLevel = expForLevel(currentLevel);
+  const progress = (exp - startOfLevel) / (endOfLevel - startOfLevel);
   return Math.min(1, Math.max(0, progress));
 }
 

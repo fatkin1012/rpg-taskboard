@@ -142,9 +142,9 @@ describe('useXP', () => {
     expect(result.current.player.level).toBe(1);
     // expForCurrent = 0 for level 1, so expInLevel = player.exp - 0 = 100
     expect(result.current.expInLevel).toBe(100);
-    // Progress: expProgress(100): currentLevel=1, currentLevelExp=50, nextLevelExp=141
-    // (100 - 50) / (141 - 50) = 50 / 91 ≈ 0.549
-    expect(result.current.progress).toBeCloseTo(50 / 91, 2);
+    // Progress: expProgress(100): currentLevel=1, startOfLevel=0, endOfLevel=expForLevel(1)=50
+    // (100 - 0) / (50 - 0) = 2.0 → clamped to 1.0 = 100%
+    expect(result.current.progress).toBeCloseTo(1.0, 2);
   });
 
   it('shows level up when setShowLevelUp is triggered manually', () => {
