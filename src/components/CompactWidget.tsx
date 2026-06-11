@@ -44,7 +44,7 @@ export default function CompactWidget({
 
       {/* Task List */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="text-[11px] text-pixel-dim font-pixel mb-1 tracking-wider">
+        <div className="text-[15px] text-pixel-dim font-pixel mb-1 tracking-wider">
           ── DAILY QUESTS ──
         </div>
         <TaskList

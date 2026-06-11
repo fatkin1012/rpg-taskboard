@@ -15,8 +15,8 @@ export default function TaskList({ tasks, onToggle, onDelete, maxItems }: TaskLi
   if (tasks.length === 0) {
     return (
       <div className="text-center py-4">
-        <p className="text-[12px] text-pixel-dim font-pixel">✨ No quests today</p>
-        <p className="text-[11px] text-pixel-dim/60 font-pixel mt-1">Add a new quest to begin!</p>
+        <p className="text-[16px] text-pixel-dim font-pixel">✨ No quests today</p>
+        <p className="text-[15px] text-pixel-dim/60 font-pixel mt-1">Add a new quest to begin!</p>
       </div>
     );
   }
@@ -32,7 +32,7 @@ export default function TaskList({ tasks, onToggle, onDelete, maxItems }: TaskLi
         />
       ))}
       {hasMore && (
-        <p className="text-[11px] text-pixel-dim font-pixel text-center pt-1">
+        <p className="text-[15px] text-pixel-dim font-pixel text-center pt-1">
           +{tasks.length - maxItems!} more...
         </p>
       )}
@@ -75,12 +75,12 @@ function TaskItem({ task, onToggle, onDelete }: {
         }`}
       >
         {task.completed && (
-          <span className="text-[12px] text-black leading-none">✓</span>
+          <span className="text-[16px] text-black leading-none">✓</span>
         )}
       </button>
 
       <span
-        className={`flex-1 text-[12px] font-mono truncate ${
+        className={`flex-1 text-[16px] font-mono truncate ${
           task.completed ? 'line-through text-pixel-dim' : 'text-pixel-text'
         }`}
       >
@@ -88,7 +88,7 @@ function TaskItem({ task, onToggle, onDelete }: {
       </span>
 
       <span
-        className="text-[10px] font-pixel flex-shrink-0 px-1 rounded"
+        className="text-[14px] font-pixel flex-shrink-0 px-1 rounded"
         style={{ color: diffColor, backgroundColor: `${diffColor}15` }}
       >
         {task.difficulty === 'Simple' ? 'S' : task.difficulty === 'Medium' ? 'M' : task.difficulty === 'Hard' ? 'H' : 'E'}
@@ -96,7 +96,7 @@ function TaskItem({ task, onToggle, onDelete }: {
 
       <button
         onClick={() => onDelete(task.id)}
-        className="opacity-0 group-hover:opacity-100 text-[12px] text-pixel-dim hover:text-pixel-accent transition-all"
+        className="opacity-0 group-hover:opacity-100 text-[16px] text-pixel-dim hover:text-pixel-accent transition-all"
       >
         ✕
       </button>

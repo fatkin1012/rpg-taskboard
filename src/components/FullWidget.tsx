@@ -60,20 +60,20 @@ export default function FullWidget({
       {/* Stats row */}
       <div className="flex items-center justify-around px-2 py-0.5 border-b border-pixel-border/30">
         <div className="text-center">
-          <span className="text-[11px] text-pixel-xp font-pixel block">{totalCompleted}</span>
-          <span className="text-[9px] text-pixel-dim font-pixel">COMPLETED</span>
+          <span className="text-[15px] text-pixel-xp font-pixel block">{totalCompleted}</span>
+          <span className="text-[13px] text-pixel-dim font-pixel">COMPLETED</span>
         </div>
         <div className="text-center">
-          <span className="text-[11px] text-pixel-hp font-pixel block">
+          <span className="text-[15px] text-pixel-hp font-pixel block">
             {doneToday}/{totalToday}
           </span>
-          <span className="text-[9px] text-pixel-dim font-pixel">TODAY</span>
+          <span className="text-[13px] text-pixel-dim font-pixel">TODAY</span>
         </div>
         <div className="text-center">
-          <span className="text-[11px] text-pixel-rare font-pixel block">
+          <span className="text-[15px] text-pixel-rare font-pixel block">
             {streak > 0 ? `🔥${streak}` : '—'}
           </span>
-          <span className="text-[9px] text-pixel-dim font-pixel">STREAK</span>
+          <span className="text-[13px] text-pixel-dim font-pixel">STREAK</span>
         </div>
       </div>
 
@@ -86,7 +86,7 @@ export default function FullWidget({
       <div className="flex-1 overflow-y-auto min-h-0 px-2">
         {activeTasks.length > 0 && (
           <div className="mb-1">
-            <div className="text-[11px] text-pixel-accent font-pixel mb-0.5 tracking-wider">
+            <div className="text-[15px] text-pixel-accent font-pixel mb-0.5 tracking-wider">
               ── ACTIVE ──
             </div>
             <TaskList
@@ -99,7 +99,7 @@ export default function FullWidget({
 
         {completedTasks.length > 0 && (
           <div>
-            <div className="text-[11px] text-pixel-hp font-pixel mb-0.5 tracking-wider">
+            <div className="text-[15px] text-pixel-hp font-pixel mb-0.5 tracking-wider">
               ── COMPLETED ──
             </div>
             <TaskList
@@ -108,7 +108,7 @@ export default function FullWidget({
               onDelete={onDelete}
             />
             {completedTasks.length > 5 && (
-              <p className="text-[10px] text-pixel-dim font-pixel text-center mt-0.5">
+              <p className="text-[14px] text-pixel-dim font-pixel text-center mt-0.5">
                 +{completedTasks.length - 5} more completed
               </p>
             )}
