@@ -89,7 +89,9 @@ export default function Overlay({ mode, onModeChange, tasks, xp, soundEnabled, o
   }, []);
 
   // Mouse-based dragging — triggers Tauri native window drag from title bar
-  const handleMouseDown = useCallback(async (e: React.MouseEvent) => {
+  // IMPORTANT: This MUST be synchronous. Tauri v2's startDragging() must be
+  // called from within the mousedown event handler before it returns.
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
 
     // Only drag from elements inside the title bar's drag region
@@ -109,8 +111,8 @@ export default function Overlay({ mode, onModeChange, tasks, xp, soundEnabled, o
 
     setIsDragging(true);
 
-    // Use Tauri's native window dragging (handles all mousemove/mouseup at OS level)
-    await startWindowDrag();
+    // Use Tauri's native window dragging — synchronous call, NO await
+    startWindowDrag();
 
     // After native drag ends, Tauri will release the mouse — clear dragging state
     const onMouseUp = () => {

@@ -44,7 +44,7 @@ export default function CompactWidget({
 
       {/* Task List */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="text-[7px] text-pixel-dim font-pixel mb-1 tracking-wider">
+        <div className="text-[11px] text-pixel-dim font-pixel mb-1 tracking-wider">
           ── DAILY QUESTS ──
         </div>
         <TaskList
@@ -60,7 +60,7 @@ export default function CompactWidget({
         {notifications.map(n => (
           <div
             key={n.id}
-            className="animate-xp-float text-[9px] text-pixel-xp font-pixel whitespace-nowrap"
+            className="animate-xp-float text-[13px] text-pixel-xp font-pixel whitespace-nowrap"
           >
             +{n.amount} EXP
           </div>

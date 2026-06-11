@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-config-schema/schema.json",
   "productName": "RPG Task Board",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "identifier": "com.rpgtaskboard.app",
   "build": {
     "frontendDist": "../dist",
@@ -10,12 +10,13 @@
     "beforeBuildCommand": "npm run build"
   },
   "app": {
+    "exitRequestedBehavior": "exit",
     "windows": [
       {
         "label": "main",
         "title": "RPG Task Board",
-        "width": 360,
-        "height": 600,
+        "width": 500,
+        "height": 700,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,

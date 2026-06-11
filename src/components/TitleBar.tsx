@@ -14,28 +14,39 @@ interface TitleBarProps {
  * Uses data-drag-region attribute for native Tauri window dragging.
  */
 export default function TitleBar({ mode, onModeChange, showSettings, onSettingsToggle }: TitleBarProps) {
-  const handleClose = useCallback(async () => {
+  /**
+   * Close the Tauri window (or browser tab as fallback).
+   *
+   * Tauri v2 may leave a transparent window lingering if close() is blocked
+   * by missing capabilities. We fix the root cause via:
+   *   1. `src-tauri/capabilities/default.json` — grants `core:window:allow-close`
+   *   2. `tauri.conf.json` — sets `app.exitRequestedBehavior: "exit"` so the
+   *      process terminates when the window is closed.
+   */
+  const handleClose = useCallback(() => {
     try {
-      const win = await getTauriWindow();
+      const win = getTauriWindow();
       if (win) {
-        await win.close();
-      } else {
-        // Browser fallback: close the tab/window
-        window.close();
+        // Fire-and-forget: win.close() returns a Promise but we don't
+        // need to await it — the permissions fix ensures it works.
+        (win as any).close();
+        return;
       }
     } catch {
-      window.close();
+      // no Tauri context — fall through
     }
+    // Browser fallback
+    window.close();
   }, []);
 
   return (
     <div
       data-drag-region
-      className="flex items-center justify-between h-[24px] min-h-[24px] bg-pixel-panel/90 border-b border-pixel-border select-none cursor-grab"
+      className="flex items-center justify-between h-[36px] min-h-[36px] bg-pixel-panel/90 border-b border-pixel-border select-none cursor-grab"
     >
       {/* App title — centered with flex-1 */}
       <div className="flex-1 text-center pointer-events-none">
-        <span className="text-[9px] text-pixel-text font-pixel tracking-wider">
+        <span className="text-[13px] text-pixel-text font-pixel tracking-wider">
           RPG Task Board
         </span>
       </div>
@@ -73,7 +84,7 @@ export default function TitleBar({ mode, onModeChange, showSettings, onSettingsT
             handleClose();
           }}
           title="Close"
-          className="ml-1 text-[10px] w-4 h-4 flex items-center justify-center rounded border border-pixel-border text-pixel-dim hover:bg-red-700/50 hover:text-red-200 hover:border-red-500 transition-all"
+          className="ml-1 text-[14px] w-6 h-6 flex items-center justify-center rounded border border-pixel-border text-pixel-dim hover:bg-red-700/50 hover:text-red-200 hover:border-red-500 transition-all"
         >
           ×
         </button>
@@ -95,7 +106,7 @@ function ModeButton({ active, label, onClick, title }: {
         onClick();
       }}
       title={title}
-      className={`text-[8px] w-4 h-4 flex items-center justify-center rounded border transition-all ${
+      className={`text-[12px] w-6 h-6 flex items-center justify-center rounded border transition-all ${
         active
           ? 'bg-pixel-xp/20 border-pixel-xp text-pixel-xp'
           : 'bg-pixel-panel border-pixel-border text-pixel-dim hover:text-pixel-text hover:border-pixel-text'

@@ -11,20 +11,20 @@ export default function XPBar({ progress, expInLevel, expForNext, level }: XPBar
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-0.5">
-        <span className="text-[7px] text-pixel-xp tracking-wider font-pixel">
+        <span className="text-[11px] text-pixel-xp tracking-wider font-pixel">
           EXP
         </span>
-        <span className="text-[6px] text-pixel-dim font-pixel">
+        <span className="text-[10px] text-pixel-dim font-pixel">
           {expInLevel}/{expForNext}
         </span>
       </div>
-      <div className="w-full h-3 bg-pixel-bg border border-pixel-border rounded-sm overflow-hidden relative">
+      <div className="w-full h-5 bg-pixel-bg border border-pixel-border rounded-sm overflow-hidden relative">
         <div
           className="h-full bg-gradient-to-r from-pixel-xp to-yellow-400 transition-all duration-500 ease-out"
           style={{ width: `${percent}%` }}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-[6px] text-black font-pixel" style={{ textShadow: 'none' }}>
+          <span className="text-[10px] text-black font-pixel" style={{ textShadow: 'none' }}>
             Lv.{level}
           </span>
         </div>

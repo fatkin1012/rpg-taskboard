@@ -37,10 +37,10 @@ export default function MiniWidget({
       </div>
 
       <div className="flex-shrink-0 text-center">
-        <span className="text-[7px] text-pixel-dim font-pixel block leading-tight">
+        <span className="text-[11px] text-pixel-dim font-pixel block leading-tight">
           {activeTaskCount}
         </span>
-        <span className="text-[5px] text-pixel-dim font-pixel block">
+        <span className="text-[9px] text-pixel-dim font-pixel block">
           QUESTS
         </span>
       </div>
@@ -50,7 +50,7 @@ export default function MiniWidget({
         {notifications.map(n => (
           <div
             key={n.id}
-            className="animate-xp-float text-[9px] text-pixel-xp font-pixel whitespace-nowrap"
+            className="animate-xp-float text-[13px] text-pixel-xp font-pixel whitespace-nowrap"
           >
             +{n.amount} EXP
           </div>

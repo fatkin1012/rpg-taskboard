@@ -41,13 +41,13 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
         >
           <div className="p-4 text-center">
             <div className="text-xl mb-2">⚠️</div>
-            <p className="text-[9px] text-pixel-accent font-pixel mb-1">RPG Taskboard</p>
-            <p className="text-[8px] text-pixel-dim font-pixel mb-3">
+            <p className="text-[13px] text-pixel-accent font-pixel mb-1">RPG Taskboard</p>
+            <p className="text-[12px] text-pixel-dim font-pixel mb-3">
               Something went wrong
             </p>
             <button
               onClick={this.handleReset}
-              className="px-3 py-1 text-[8px] font-pixel text-pixel-text border border-pixel-border rounded hover:bg-pixel-panel/50"
+              className="px-3 py-1 text-[12px] font-pixel text-pixel-text border border-pixel-border rounded hover:bg-pixel-panel/50"
             >
               Try Again
             </button>
