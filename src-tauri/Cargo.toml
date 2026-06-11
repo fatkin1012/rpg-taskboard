@@ -1,6 +1,6 @@
 [package]
 name = "rpg-taskboard"
-version = "0.2.0"
+version = "0.2.2"
 description = "A VPET-style RPG Task Board that lives in your screen corner"
 authors = ["RPG Task Board Team"]
 edition = "2021"

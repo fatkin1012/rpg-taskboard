@@ -35,16 +35,16 @@ jobs:
       - name: Build Tauri app
         run: npm run tauri build
 
-      - name: Upload MSI
+      - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
           name: RPG-Task-Board-Windows
-          path: src-tauri/target/release/bundle/msi/*.msi
+          path: src-tauri/target/release/bundle/nsis/*.exe
 
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
-          files: src-tauri/target/release/bundle/msi/*.msi
+          files: src-tauri/target/release/bundle/nsis/*.exe
           generate_release_notes: true
           name: RPG Taskboard ${{ github.ref_name }}
