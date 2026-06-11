@@ -44,15 +44,8 @@ export default function TitleBar({ mode, onModeChange, showSettings, onSettingsT
       data-drag-region
       className="flex items-center justify-between h-[36px] min-h-[36px] bg-pixel-panel/90 border-b border-pixel-border select-none cursor-grab"
     >
-      {/* App title — centered with flex-1 */}
-      <div className="flex-1 text-center pointer-events-none">
-        <span className="text-[13px] text-pixel-text font-pixel tracking-wider">
-          RPG Task Board
-        </span>
-      </div>
-
       {/* Action buttons — right side */}
-      <div className="flex items-center gap-0.5 pr-1">
+      <div className="flex items-center justify-end gap-0.5 pr-1 w-full">
         <ModeButton
           active={showSettings}
           label="⚙"
