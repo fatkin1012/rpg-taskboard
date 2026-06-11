@@ -1,8 +1,11 @@
 [package]
 name = "rpg-taskboard"
-version = "0.2.2"
+version = "0.2.3"
 description = "A VPET-style RPG Task Board that lives in your screen corner"
 authors = ["RPG Task Board Team"]
+homepage = "https://github.com/rpg-taskboard/rpg-taskboard"
+repository = "https://github.com/rpg-taskboard/rpg-taskboard"
+copyright = "Copyright (c) 2024 RPG Task Board Team. All rights reserved."
 edition = "2021"
 
 [lib]

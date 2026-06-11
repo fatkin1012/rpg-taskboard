@@ -23,8 +23,8 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
 
 export const MODE_DIMENSIONS = {
   mini: { width: '200px', minHeight: '60px' },
-  compact: { width: '250px', minHeight: '300px' },
-  full: { width: '320px', minHeight: '440px' },
+  compact: { width: '250px', minHeight: '360px' },
+  full: { width: '320px', minHeight: '500px' },
 };
 
 /**

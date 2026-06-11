@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { WidgetMode, Difficulty, OverlayTasks, OverlayXP } from '../types';
 import { MODE_DIMENSIONS } from '../constants';
+import TitleBar from './TitleBar';
 import MiniWidget from './MiniWidget';
 import CompactWidget from './CompactWidget';
 import FullWidget from './FullWidget';
@@ -46,13 +47,24 @@ export default function Overlay({ mode, onModeChange, tasks, xp, soundEnabled, o
     return () => clearTimeout(timer);
   }, [position]);
 
-  // Mouse-based dragging (works in both browser and Tauri)
+  // Mouse-based dragging — only triggers on title bar (data-drag-region)
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Only drag from the title bar area
     const target = e.target as HTMLElement;
-    if (!target.closest('[data-drag-region]')) return;
-    // Don't drag when clicking buttons or inputs
-    if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.closest('button') || target.closest('input')) return;
+
+    // Only drag from elements inside the title bar's drag region
+    const dragRegion = target.closest('[data-drag-region]');
+    if (!dragRegion) return;
+
+    // Strict check: never drag when clicking any interactive element
+    if (
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('textarea') ||
+      target.closest('[role="button"]') ||
+      target.tagName === 'BUTTON' ||
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA'
+    ) return;
 
     setIsDragging(true);
     setDragOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
@@ -125,6 +137,7 @@ export default function Overlay({ mode, onModeChange, tasks, xp, soundEnabled, o
   return (
     <div
       ref={overlayRef}
+      onMouseDown={handleMouseDown}
       className="overlay-window fixed select-none"
       style={{
         width: dims.width,
@@ -135,127 +148,73 @@ export default function Overlay({ mode, onModeChange, tasks, xp, soundEnabled, o
         zIndex: 9999,
       }}
     >
-      {/* Drag region — the entire top area */}
-      <div
-        data-drag-region
-        onMouseDown={handleMouseDown}
-        className="cursor-grab active:cursor-grabbing"
-      >
-        {/* Top-right controls: settings + mode buttons */}
-        <div className="flex justify-end gap-0.5 p-0.5 absolute top-0 right-0 z-10">
-          <ModeButton
-            active={showSettings}
-            label="⚙"
-            onClick={() => setShowSettings(!showSettings)}
-            title="Settings"
-          />
-          <ModeButton
-            active={mode === 'mini'}
-            label="─"
-            onClick={() => onModeChange('mini')}
-            title="Mini mode [1]"
-          />
-          <ModeButton
-            active={mode === 'compact'}
-            label="▣"
-            onClick={() => onModeChange('compact')}
-            title="Compact mode [2]"
-          />
-          <ModeButton
-            active={mode === 'full'}
-            label="☰"
-            onClick={() => onModeChange('full')}
-            title="Full mode [3]"
-          />
-        </div>
+      {/* Title bar — visible drag handle with close button */}
+      <TitleBar
+        mode={mode}
+        onModeChange={onModeChange}
+        showSettings={showSettings}
+        onSettingsToggle={() => setShowSettings(!showSettings)}
+      />
 
-        {/* Widget content based on mode */}
-        <div
-          className="bg-pixel-panel/90 border border-pixel-border rounded-lg shadow-lg shadow-black/50 backdrop-blur-sm overflow-hidden relative"
-          style={{ minHeight: dims.minHeight }}
-        >
-          {showSettings ? (
-            <SettingsPanel
-              soundEnabled={soundEnabled}
-              onSoundToggle={onSoundToggle}
-              onClose={() => setShowSettings(false)}
-            />
-          ) : (
-            <>
-              {mode === 'mini' && (
-                <MiniWidget
-                  level={xp.player.level}
-                  expInLevel={xp.expInLevel}
-                  expForNext={xp.expForNext}
-                  progress={xp.progress}
-                  activeTaskCount={tasks.activeTasks.length}
-                  showLevelUp={xp.showLevelUp}
-                  notifications={xp.notifications}
-                />
-              )}
+      {/* Widget content based on mode */}
+      <div className="bg-pixel-panel/90 border border-t-0 border-pixel-border rounded-b-lg shadow-lg shadow-black/50 backdrop-blur-sm overflow-hidden relative">
+        {showSettings ? (
+          <SettingsPanel
+            soundEnabled={soundEnabled}
+            onSoundToggle={onSoundToggle}
+            onClose={() => setShowSettings(false)}
+          />
+        ) : (
+          <>
+            {mode === 'mini' && (
+              <MiniWidget
+                level={xp.player.level}
+                expInLevel={xp.expInLevel}
+                expForNext={xp.expForNext}
+                progress={xp.progress}
+                activeTaskCount={tasks.activeTasks.length}
+                showLevelUp={xp.showLevelUp}
+                notifications={xp.notifications}
+              />
+            )}
 
-              {mode === 'compact' && (
-                <CompactWidget
-                  level={xp.player.level}
-                  expInLevel={xp.expInLevel}
-                  expForNext={xp.expForNext}
-                  progress={xp.progress}
-                  tasks={tasks.tasks}
-                  activeTasks={tasks.activeTasks}
-                  showLevelUp={xp.showLevelUp}
-                  notifications={xp.notifications}
-                  onToggle={handleToggleComplete}
-                  onDelete={tasks.deleteTask}
-                />
-              )}
+            {mode === 'compact' && (
+              <CompactWidget
+                level={xp.player.level}
+                expInLevel={xp.expInLevel}
+                expForNext={xp.expForNext}
+                progress={xp.progress}
+                tasks={tasks.tasks}
+                activeTasks={tasks.activeTasks}
+                showLevelUp={xp.showLevelUp}
+                notifications={xp.notifications}
+                onToggle={handleToggleComplete}
+                onDelete={tasks.deleteTask}
+              />
+            )}
 
-              {mode === 'full' && (
-                <FullWidget
-                  level={xp.player.level}
-                  expInLevel={xp.expInLevel}
-                  expForNext={xp.expForNext}
-                  progress={xp.progress}
-                  tasks={tasks.tasks}
-                  activeTasks={tasks.activeTasks}
-                  completedTasks={tasks.completedTasks}
-                  totalCompleted={xp.player.totalCompleted}
-                  streak={xp.player.streak}
-                  showLevelUp={xp.showLevelUp}
-                  notifications={xp.notifications}
-                  onToggle={handleToggleComplete}
-                  onDelete={tasks.deleteTask}
-                  onAddTask={handleAddTask}
-                  onUncomplete={handleUncomplete}
-                />
-              )}
-            </>
-          )}
-        </div>
+            {mode === 'full' && (
+              <FullWidget
+                level={xp.player.level}
+                expInLevel={xp.expInLevel}
+                expForNext={xp.expForNext}
+                progress={xp.progress}
+                tasks={tasks.tasks}
+                activeTasks={tasks.activeTasks}
+                completedTasks={tasks.completedTasks}
+                totalCompleted={xp.player.totalCompleted}
+                streak={xp.player.streak}
+                showLevelUp={xp.showLevelUp}
+                notifications={xp.notifications}
+                onToggle={handleToggleComplete}
+                onDelete={tasks.deleteTask}
+                onAddTask={handleAddTask}
+                onUncomplete={handleUncomplete}
+              />
+            )}
+          </>
+        )}
       </div>
     </div>
-  );
-}
-
-function ModeButton({ active, label, onClick, title }: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-  title: string;
-}) {
-  return (
-    <button
-      onClick={e => {
-        e.stopPropagation();
-        onClick();
-      }}
-      title={title}
-      className={`text-[8px] w-4 h-4 flex items-center justify-center rounded border transition-all ${
-        active
-          ? 'bg-pixel-xp/20 border-pixel-xp text-pixel-xp'
-          : 'bg-pixel-panel border-pixel-border text-pixel-dim hover:text-pixel-text hover:border-pixel-text'
-      }`}
-    >
-      {label}
-    </button>
   );
 }
