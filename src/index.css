@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Reset for the overlay window */
+/* Reset for the overlay window — fill 100% of the Tauri viewport */
 html, body, #root {
   margin: 0;
   padding: 0;
@@ -16,4 +16,10 @@ html, body, #root {
 body {
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Ensure outermost mount point fills everything */
+#root {
+  display: flex;
+  flex-direction: column;
 }

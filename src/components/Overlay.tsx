@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { WidgetMode, Difficulty, OverlayTasks, OverlayXP } from '../types';
 import { MODE_DIMENSIONS } from '../constants';
+import { startWindowDrag, getTauriWindow, setWindowSize, setWindowPosition, getWindowPosition } from '../utils/tauri';
 import TitleBar from './TitleBar';
 import MiniWidget from './MiniWidget';
 import CompactWidget from './CompactWidget';
@@ -18,44 +19,84 @@ interface OverlayProps {
 
 export default function Overlay({ mode, onModeChange, tasks, xp, soundEnabled, onSoundToggle }: OverlayProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [showSettings, setShowSettings] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const dims = MODE_DIMENSIONS[mode];
 
-  // Load saved position
+  // Restore saved window position on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('rpg-taskboard-position');
-      if (saved) {
-        setPosition(JSON.parse(saved));
+    const restore = async () => {
+      try {
+        const saved = localStorage.getItem('rpg-taskboard-position');
+        if (saved) {
+          const { x, y } = JSON.parse(saved);
+          await setWindowSize(parseInt(dims.width), parseInt(dims.minHeight));
+          await setWindowPosition(x, y);
+        } else {
+          // First launch — use default size
+          await setWindowSize(parseInt(dims.width), parseInt(dims.minHeight));
+        }
+      } catch {
+        // Non-Tauri environment or error — ignore
       }
-    } catch {}
+    };
+    restore();
+    // Run only once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Save position (debounced)
-  const latestPosition = useRef(position);
-  latestPosition.current = position;
+  // Resize the Tauri window when mode changes
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const resize = async () => {
       try {
-        localStorage.setItem('rpg-taskboard-position', JSON.stringify(latestPosition.current));
-      } catch {}
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [position]);
+        const width = parseInt(dims.width);
+        const height = parseInt(dims.minHeight);
+        await setWindowSize(width, height);
+      } catch {
+        // Non-Tauri environment — ignore
+      }
+    };
+    resize();
+  }, [mode, dims]);
 
-  // Mouse-based dragging — only triggers on title bar (data-drag-region)
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  // Poll window position periodically to save (covers native drag end)
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const win = await getTauriWindow();
+        if (win) {
+          const pos = await win.outerPosition();
+          localStorage.setItem('rpg-taskboard-position', JSON.stringify({ x: pos.x, y: pos.y }));
+        }
+      } catch {}
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Also save position on window blur (user clicked away)
+  useEffect(() => {
+    const handleBlur = async () => {
+      try {
+        const pos = await getWindowPosition();
+        if (pos) {
+          localStorage.setItem('rpg-taskboard-position', JSON.stringify(pos));
+        }
+      } catch {}
+    };
+    window.addEventListener('blur', handleBlur);
+    return () => window.removeEventListener('blur', handleBlur);
+  }, []);
+
+  // Mouse-based dragging — triggers Tauri native window drag from title bar
+  const handleMouseDown = useCallback(async (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
 
     // Only drag from elements inside the title bar's drag region
     const dragRegion = target.closest('[data-drag-region]');
     if (!dragRegion) return;
 
-    // Strict check: never drag when clicking any interactive element
+    // Never drag when clicking any interactive element
     if (
       target.closest('button') ||
       target.closest('input') ||
@@ -67,34 +108,17 @@ export default function Overlay({ mode, onModeChange, tasks, xp, soundEnabled, o
     ) return;
 
     setIsDragging(true);
-    setDragOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
-  }, [position]);
 
-  useEffect(() => {
-    if (!isDragging) return;
+    // Use Tauri's native window dragging (handles all mousemove/mouseup at OS level)
+    await startWindowDrag();
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const overlayWidth = overlayRef.current?.offsetWidth ?? parseInt(dims.width);
-      const overlayHeight = overlayRef.current?.offsetHeight ?? parseInt(dims.minHeight);
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
-      setPosition({
-        x: Math.max(0, Math.min(newX, window.innerWidth - overlayWidth)),
-        y: Math.max(0, Math.min(newY, window.innerHeight - overlayHeight)),
-      });
-    };
-
-    const handleMouseUp = () => {
+    // After native drag ends, Tauri will release the mouse — clear dragging state
+    const onMouseUp = () => {
       setIsDragging(false);
+      window.removeEventListener('mouseup', onMouseUp);
     };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, dragOffset, dims.width, dims.minHeight]);
+    window.addEventListener('mouseup', onMouseUp);
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -138,14 +162,9 @@ export default function Overlay({ mode, onModeChange, tasks, xp, soundEnabled, o
     <div
       ref={overlayRef}
       onMouseDown={handleMouseDown}
-      className="overlay-window fixed select-none"
+      className="overlay-window h-full w-full flex flex-col select-none"
       style={{
-        width: dims.width,
-        minHeight: dims.minHeight,
-        left: position.x,
-        top: position.y,
         opacity: isDragging ? 0.85 : 1,
-        zIndex: 9999,
       }}
     >
       {/* Title bar — visible drag handle with close button */}
@@ -156,8 +175,8 @@ export default function Overlay({ mode, onModeChange, tasks, xp, soundEnabled, o
         onSettingsToggle={() => setShowSettings(!showSettings)}
       />
 
-      {/* Widget content based on mode */}
-      <div className="bg-pixel-panel/90 border border-t-0 border-pixel-border rounded-b-lg shadow-lg shadow-black/50 backdrop-blur-sm overflow-hidden relative">
+      {/* Widget content based on mode — fills remaining space below title bar */}
+      <div className="flex-1 bg-pixel-panel/90 overflow-hidden relative">
         {showSettings ? (
           <SettingsPanel
             soundEnabled={soundEnabled}

@@ -11,6 +11,7 @@ interface TitleBarProps {
 /**
  * TitleBar — visible drag handle at the top of the overlay.
  * Provides: drag region, centered app name, mode buttons, close button.
+ * Uses data-drag-region attribute for native Tauri window dragging.
  */
 export default function TitleBar({ mode, onModeChange, showSettings, onSettingsToggle }: TitleBarProps) {
   const handleClose = useCallback(async () => {
@@ -30,11 +31,10 @@ export default function TitleBar({ mode, onModeChange, showSettings, onSettingsT
   return (
     <div
       data-drag-region
-      className="flex items-center justify-between h-[24px] min-h-[24px] bg-pixel-panel/90 border-b border-pixel-border select-none"
-      style={{ cursor: 'grab' }}
+      className="flex items-center justify-between h-[24px] min-h-[24px] bg-pixel-panel/90 border-b border-pixel-border select-none cursor-grab"
     >
       {/* App title — centered with flex-1 */}
-      <div className="flex-1 text-center">
+      <div className="flex-1 text-center pointer-events-none">
         <span className="text-[9px] text-pixel-text font-pixel tracking-wider">
           RPG Task Board
         </span>
